@@ -54,11 +54,27 @@ export function chrome(current, { footer = true } = {}) {
     + `<button type="button" class="theme" aria-pressed="${isDark()}" aria-label="Dark mode">${ICON.theme}<span class="theme-label">${isDark() ? 'Light' : 'Dark'}</span></button>`;
   document.body.prepend(header);
   header.querySelector('.theme').addEventListener('click', () => setTheme(!isDark()));
+  slideAway(header);
   if (!footer) return;
   const foot = document.createElement('footer');
   foot.className = 'foot';
   foot.innerHTML = '<p><b>Unofficial index</b> · not affiliated with CASS · summaries are machine-generated and may contain errors</p><a href="about.html">About this project →</a>';
   document.body.append(foot);
+}
+
+// the header stays at the top of the screen, but slides out of the way while you scroll down
+// and comes back as soon as you scroll up a little
+function slideAway(header) {
+  let lastY = window.scrollY, ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = Math.max(0, window.scrollY), d = y - lastY;
+    if (Math.abs(d) < 6) return;
+    header.classList.toggle('nav-away', d > 0 && y > header.offsetHeight);
+    lastY = y;
+  };
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  header.addEventListener('focusin', () => header.classList.remove('nav-away'));
 }
 
 /* ---------------- data ---------------- */
@@ -140,7 +156,7 @@ function renderArticle(dlgMain, a) {
     esc(TYPES[a.type] || 'Article') + (a.isTrans ? ', in Chinese translation' : '')].filter(Boolean).join(' · ');
   const pieces = linkTerms(a.paras || [], a.glossary || []);
   const paras = pieces.map((segs, pi) => `<div class="para" data-p="${pi}"><p>${segs.map((sg) => sg.g == null ? esc(sg.t)
-    : `<button type="button" class="term" data-g="${sg.g}" aria-expanded="false" aria-controls="gl-${pi}">${esc(sg.t)}</button>`).join('')}</p></div>`);
+    : `<span class="term" role="button" tabindex="0" data-g="${sg.g}" aria-expanded="false" aria-controls="gl-${pi}">${esc(sg.t)}</span>`).join('')}</p></div>`);
   // the quote sits between the first and second paragraph of the summary
   const quote = a.quoteEn ? `<figure class="quote"><blockquote>“${esc(a.quoteEn)}”</blockquote><p lang="zh">${esc(a.quoteZh)}</p></figure>` : '';
   const on = saved.has(a.id);
@@ -155,15 +171,23 @@ function renderArticle(dlgMain, a) {
   bar.querySelector('.orig').href = a.url;
   dlgMain.querySelector('.dlg-note a').href = a.archive;
   // glossary fold-outs
-  dlgMain.querySelectorAll('.term').forEach((b) => b.addEventListener('click', () => {
+  const toggleTerm = (b) => {
     const para = b.closest('.para'); const open = b.getAttribute('aria-expanded') === 'true';
     dlgMain.querySelectorAll('.gloss').forEach((x) => x.remove());
     dlgMain.querySelectorAll('.term').forEach((x) => x.setAttribute('aria-expanded', 'false'));
     if (open) return;
     b.setAttribute('aria-expanded', 'true');
     para.insertAdjacentHTML('beforeend', glossPanel(a.glossary[+b.dataset.g], para.dataset.p));
-    para.querySelector('.fx').addEventListener('click', () => { para.querySelector('.gloss').remove(); b.setAttribute('aria-expanded', 'false'); b.focus(); });
-  }));
+    const gl = para.querySelector('.gloss');
+    gl.querySelector('.fx').addEventListener('click', () => { gl.remove(); b.setAttribute('aria-expanded', 'false'); b.focus(); });
+    // the explanation opens under the paragraph: bring it into view (on a phone it is often off screen)
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(() => gl.scrollIntoView({ block: 'nearest', behavior: calm ? 'auto' : 'smooth' }));
+  };
+  dlgMain.querySelectorAll('.term').forEach((b) => {
+    b.addEventListener('click', () => toggleTerm(b));
+    b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTerm(b); } });
+  });
 }
 
 async function showCurrent() {
@@ -199,11 +223,11 @@ export function openArticle(ids, pos = 0, label = '') {
           <div class="dlg-top"><p></p><button type="button" class="x" aria-label="Close and put back on the shelf">${ICON.x}</button></div>
           <div class="dlg-body"></div>
           <div class="dlg-bar">
-            <button type="button" class="btn prev">← Previous</button>
-            <button type="button" class="btn next">Next →</button>
+            <button type="button" class="btn prev" aria-label="Previous article"><span aria-hidden="true">←</span><span class="lbl">Previous</span></button>
+            <button type="button" class="btn next" aria-label="Next article"><span class="lbl">Next</span><span aria-hidden="true">→</span></button>
             <button type="button" class="btn icon save"></button>
             <span class="sp"></span>
-            <a class="orig" href="#" target="_blank" rel="noopener">Read the original <span lang="zh">阅读原文</span>${ICON.out}</a>
+            <a class="orig" href="#" target="_blank" rel="noopener"><span class="rt">Read the </span>original <span lang="zh">阅读原文</span>${ICON.out}</a>
           </div>
           <details class="dlg-note"><summary>Can’t open it?</summary><p>The original is on marxism.cass.cn, which may load slowly or not at all outside China. <a href="#" target="_blank" rel="noopener">Try the archived copy (Wayback Machine) ↗</a></p></details>
         </div>
@@ -233,7 +257,7 @@ function onKey(e) {
   else if (e.key === 'ArrowRight' && !e.target.closest('input,select,textarea')) step(1);
   else if (e.key === 'ArrowLeft' && !e.target.closest('input,select,textarea')) step(-1);
   else if (e.key === 'Tab') { // keep focus inside the dialog
-    const f = [...document.querySelectorAll('.pop button:not([hidden]), .pop a[href]')];
+    const f = [...document.querySelectorAll('.pop button:not([hidden]), .pop a[href], .pop summary, .pop [tabindex="0"]')];
     if (!f.length) return;
     if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
     else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }

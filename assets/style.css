@@ -25,7 +25,7 @@ button{font:inherit;color:inherit}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---------- header / footer ---------- */
-.nav{display:flex;flex-wrap:wrap;align-items:stretch;border-bottom:3px solid var(--fg);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.nav{position:sticky;top:0;z-index:40;background:var(--bg);transition:transform .25s ease;display:flex;flex-wrap:wrap;align-items:stretch;border-bottom:3px solid var(--fg);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .nav a,.nav button{display:flex;align-items:center;gap:10px;padding:0 24px;min-height:56px;color:var(--fg);text-decoration:none;background:transparent;border:0;border-left:3px solid var(--fg);cursor:pointer;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .nav .logo{border-left:0;border-right:3px solid var(--fg);font-family:var(--f-cond);font-weight:700;font-size:22px;letter-spacing:0}
 .nav .logo span{font-weight:900;font-size:18px}
@@ -33,6 +33,8 @@ button{font:inherit;color:inherit}
 .nav a[aria-current="page"]{background:var(--fg);color:var(--bg)}
 .nav a:hover,.nav button:hover{background:var(--blue);color:var(--onblue)}
 .nav button{padding:0 20px}
+.nav.nav-away{transform:translateY(-100%)}
+@media (prefers-reduced-motion:reduce){.nav{transition:none}}
 @media (max-width:640px){
   .nav{font-size:12px}
   .nav .sp{display:none}
@@ -74,7 +76,8 @@ select,input{background:var(--bg);color:var(--fg)}
 .row:hover .meta{color:var(--onblue)}
 
 /* ---------- home ---------- */
-.home main{display:flex;flex-direction:column;justify-content:center;padding:48px var(--gutter) 40px}
+.home main{padding:0 var(--gutter) 40px}
+.home .first{min-height:calc(100vh - 60px);min-height:calc(100svh - 60px);display:flex;flex-direction:column;justify-content:center;padding:48px 0 40px}
 .hero{position:relative}
 .hero h1{margin:0;font-family:var(--f-title);font-weight:700;font-size:153px;line-height:.86;text-transform:uppercase;width:1237px;max-width:100%}
 .hero .sub{display:flex;flex-wrap:wrap;margin:0;padding:12px 0 12px 10px;font-style:italic;font-size:24px;line-height:1.45}
@@ -85,6 +88,18 @@ select,input{background:var(--bg);color:var(--fg)}
 .home .cta .btns{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .home .cta p{margin:0;font-size:13px;line-height:1.5;max-width:56ch}
 .home .stats{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:14px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.home-cats{border-top:3px solid var(--fg)}
+.home-cats h2{margin:0;padding:28px 0 14px;display:flex;align-items:baseline;gap:14px;font:600 14px var(--f-mono);letter-spacing:.12em;color:var(--red)}
+.home-cats h2 span{font-weight:900;font-size:20px;letter-spacing:.08em}
+.home-cats ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr));column-gap:48px;border-top:3px solid var(--fg)}
+.home-cats li{border-bottom:1px solid var(--fg)}
+.home-cats .row{align-items:baseline;gap:16px;padding:14px 12px;height:100%}
+.home-cats .n{flex:0 0 30px;font:700 22px/1 var(--f-cond);color:var(--red)}
+.home-cats .t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
+.home-cats .en{font:700 20px/1.1 var(--f-cond);text-transform:uppercase}
+.home-cats .zh{font-size:14px;color:var(--red)}
+.home-cats .row:hover .n,.home-cats .row:hover .zh{color:var(--onblue)}
+.home-cats .c{flex:0 0 auto;font-size:13px}
 @media (max-width:1300px){
   .hero h1{font-size:11.5vw}
   .hero .zh{font-size:8vw;right:4vw;top:7vw}
@@ -93,10 +108,11 @@ select,input{background:var(--bg);color:var(--fg)}
   .hero h1{font-size:15vw;line-height:.9}
   .hero .zh{font-size:9vw;top:9vw;right:0}
   .hero .sub{font-size:17px;padding-left:0}
+  .home .first{min-height:0;padding:36px 0 32px}
 }
 
 /* ---------- browse ---------- */
-.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));border-left:3px solid var(--fg);margin-left:-3px}
+.cats{overflow:hidden;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));border-left:3px solid var(--fg);margin-left:-3px}
 .cat{border-right:3px solid var(--fg);border-bottom:3px solid var(--fg);display:flex;flex-direction:column;margin-right:-3px}
 .cat-head{display:flex;align-items:baseline;gap:14px;padding:24px 28px 18px}
 .cat-num{flex:0 0 auto;min-width:28px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--red)}
@@ -258,7 +274,7 @@ body.modal-open{overflow:hidden}
 .sum-head a{color:inherit;text-decoration:underline dotted var(--red);text-underline-offset:3px}
 .para{display:flex;flex-direction:column;gap:14px;max-width:66ch}
 .para>p{margin:0;font-family:var(--f-serif);font-size:18px;line-height:1.65}
-.term{background:none;border:0;padding:0;margin:0;font:inherit;line-height:inherit;cursor:help;text-decoration:underline dotted var(--red);text-decoration-thickness:2px;text-underline-offset:4px;color:inherit}
+.term{display:inline;cursor:pointer;-webkit-box-decoration-break:clone;box-decoration-break:clone;text-decoration:underline dotted var(--red);text-decoration-thickness:2px;text-underline-offset:4px;color:inherit}
 .term[aria-expanded="true"]{background:var(--fg);color:var(--bg);text-decoration-color:var(--bg)}
 .gloss{position:relative;display:flex;flex-wrap:wrap;gap:16px 28px;padding:18px 56px 20px 0;border-top:3px dotted var(--red);border-bottom:3px dotted var(--red)}
 .gloss .l{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;min-width:150px}
@@ -293,13 +309,42 @@ body.modal-open{overflow:hidden}
   .spine .num{font-size:22px}
   .spine .bar{width:3px;height:18px}
   .spine .vt{writing-mode:horizontal-tb;font-size:15px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .dlg-body{padding:24px 20px 28px}
-  .dlg-body h2{font-size:28px}
+  /* on a phone the popup takes the whole screen, and everything around the text is kept thin */
+  .pop{padding:0}
+  .dlg{position:absolute;inset:0;width:auto;height:auto;max-height:none;border:0}
+  .spine{min-height:48px;padding:0 64px 0 16px}
+  .dlg-top{position:absolute;top:0;right:0;z-index:2;border:0}
+  .dlg-top p{display:none}
+  .dlg-top .x{width:52px;height:45px;background:transparent;color:var(--bg);border-left:3px solid var(--fg)}
+  .dlg-top .x:hover{background:var(--fg);color:var(--bg)}
+  .dlg-body{padding:18px 16px 20px;gap:12px}
+  .dlg-body h2{font-size:25px}
+  .dlg-body .zh-t{font-size:17px}
+  .sum-head{margin-top:6px}
   .quote blockquote{font-size:20px}
-  .dlg-bar{padding:12px 16px}
+  .dlg-bar{flex-wrap:nowrap;gap:2px;padding:6px 8px}
+  .dlg-bar .btn,.dlg-bar .btn.icon{width:44px;height:44px;min-height:44px;padding:0;border:0;background:transparent;color:var(--fg)}
+  .dlg-bar .btn[aria-pressed="true"]{background:transparent;color:var(--fg)}
+  .dlg-bar .btn span{font-size:24px;line-height:1}
+  .dlg-bar .btn .lbl{display:none}
+  .orig{min-height:40px;padding:0 12px;gap:8px;font-size:12px;white-space:nowrap}
+  .orig .rt,.orig span[lang]{display:none}
+  .dlg-note{padding:0 12px 8px}
 }
 
 .side-donate{margin-top:28px;padding:18px;background:var(--blue);color:var(--onblue);display:flex;flex-direction:column;gap:12px}
 .side-donate p{margin:0;font:600 18px/1.25 var(--f-cond)}
 .side-donate .btn{align-self:flex-start;min-height:44px}
 .side-donate .btn:hover{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+
+/* ---------- instructions ---------- */
+.page-head h1.long{font-size:clamp(40px,10.5vw,168px)}
+.instr .prompt{max-width:66ch;padding:28px 32px;border:3px solid var(--fg);font-size:17px;line-height:1.6}
+.instr .prompt h3{margin:28px 0 8px;font:700 22px/1.15 var(--f-cond);text-transform:uppercase}
+.instr .prompt h3:first-child{margin-top:0}
+.instr .prompt p{margin:0 0 12px}
+.instr .prompt ul,.instr .prompt ol{margin:0 0 12px;padding-left:1.4em}
+.instr .prompt li{margin:0 0 6px}
+.instr .prompt code{font:14px var(--f-mono)}
+@media (max-width:640px){.instr .prompt{padding:18px 16px;font-size:16px}}
+@media (max-width:640px){.dlg-bar .btn:hover{background:transparent;color:var(--blue)}}

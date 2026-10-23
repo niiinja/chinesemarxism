@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>try{var t=localStorage.getItem('icm-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script>
 <link rel="stylesheet" href="assets/fonts.css?v=9">
-<link rel="stylesheet" href="assets/style.css?v=9">
+<link rel="stylesheet" href="assets/style.css?v=10">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D4140B'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle' fill='white' font-family='serif'%3E马%3C/text%3E%3C/svg%3E">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -28,6 +28,7 @@
 </head>
 <body class="home">
 <main>
+  <div class="first">
   <div class="hero">
     <h1>Index of<br>Chinese<br>Marxism</h1>
     <p class="sub">All articles of the CASS Academy of Marxism&nbsp;<a href="about.html">unofficially summarized &amp; indexed</a></p>
@@ -42,11 +43,22 @@
     <p>All articles from <a href="http://marxism.cass.cn/">marxism.cass.cn</a>, summarized into English and easily searchable for non-Chinese Marxists. DIY project.</p>
   </div>
   <div class="stats"><span id="count">… articles summarised</span><span id="sync"></span></div>
+  </div>
+  <section class="home-cats" aria-labelledby="hc-h">
+    <h2 id="hc-h">BROWSE BY CATEGORY <span lang="zh">浏览</span></h2>
+    <ol id="hcats"></ol>
+  </section>
 </main>
 <script type="module">
-import { chrome, loadIndex, openFromUrl } from './assets/core.js?v=9';
+import { chrome, loadIndex, openFromUrl, CATS, pad, esc } from './assets/core.js?v=10';
 chrome('index.html', { footer: false });
+const list = (counts = {}) => CATS.slice(1).map((c) => `<li><a class="row" href="browse.html?cat=${c.num}">`
+  + `<b class="n">${pad(c.num)}</b><span class="t"><span class="en">${esc(c.en)}</span><span class="zh" lang="zh">${esc(c.zh)}</span></span>`
+  + `<span class="c meta">${counts[c.num] ? counts[c.num].toLocaleString('en-GB') : ''}</span></a></li>`).join('');
+document.getElementById('hcats').innerHTML = list();
 loadIndex().then((rows) => {
+  const counts = {}; rows.forEach((r) => { counts[r.cat] = (counts[r.cat] || 0) + 1; });
+  document.getElementById('hcats').innerHTML = list(counts);
   document.getElementById('count').textContent = rows.length.toLocaleString('en-GB') + ' articles summarised';
   const last = rows.reduce((m, r) => (r.date > m ? r.date : m), '');
   document.getElementById('sync').textContent = 'Newest article ' + last;
