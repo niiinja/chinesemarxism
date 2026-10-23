@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Browse — Index of Chinese Marxism</title>
+<meta name="description" content="Browse English summaries of marxism.cass.cn by category.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem('icm-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script>
+<link rel="stylesheet" href="assets/fonts.css?v=9">
+<link rel="stylesheet" href="assets/style.css?v=9">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D4140B'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle' fill='white' font-family='serif'%3E马%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#D4140B">
+<meta property="og:site_name" content="Index of Chinese Marxism">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Browse — Index of Chinese Marxism">
+<meta property="og:description" content="Browse English summaries of marxism.cass.cn by category.">
+<meta property="og:image" content="https://chinesemarxism.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script>
+  // count page visits only: never the search question or other parameters in the address
+  window.goatcounter = { path: function () { return location.pathname; } };
+</script>
+<script data-goatcounter="https://indexofchinesemarxism.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script type="module">
+import { chrome, CATS, pad, zhNum, esc, loadIndex, openArticle, openFromUrl } from './assets/core.js?v=9';
+chrome('browse.html');
+const app = document.getElementById('app');
+const PAGE = 40;
+let rows = [];
+
+function row(it, cls) {
+  return `<li><button type="button" class="row" data-id="${it.id}">${cls === 'cv'
+    ? `<span class="d meta">${esc(it.date)}</span><span class="m"><span class="it-t">${esc(it.t)}</span><span class="it-zh meta" lang="zh">${esc(it.zh)}</span></span><span class="au meta">${esc(it.a)}</span>`
+    : `<span class="it-t">${esc(it.t)}</span><span class="it-zh meta" lang="zh">${esc(it.zh)}</span><span class="it-a meta">${esc(it.a)}</span>`}</button></li>`;
+}
+
+function grid() {
+  document.title = 'Browse — Index of Chinese Marxism';
+  const byCat = {};
+  rows.forEach((r) => { (byCat[r.cat] = byCat[r.cat] || []).push(r); });
+  app.innerHTML = `<div class="page-head"><h1>Browse</h1><p class="zh" lang="zh">浏览</p></div>
+  <div class="cats">${CATS.slice(1).map((c) => {
+    const items = (byCat[c.num] || []).slice(0, 3);
+    return `<section class="cat"><div class="cat-head"><span class="cat-num"><b>${pad(c.num)}</b><span lang="zh">${zhNum(c.num)}</span></span>
+      <div><h2>${esc(c.en)}</h2><p lang="zh">${esc(c.zh)}</p></div></div>
+      <ol data-list="${items.map((x) => x.id).join(',')}" data-label="Shelf ${pad(c.num)}">${items.map((x) => row(x)).join('')}</ol>
+      <a class="lnk all" href="?cat=${c.num}">All ${(byCat[c.num] || []).length} articles →</a></section>`;
+  }).join('')}</div>`;
+}
+
+function catView(n, sort = 'new', year = '', shown = PAGE) {
+  const c = CATS[n];
+  document.title = c.en + ' — Index of Chinese Marxism';
+  let items = rows.filter((r) => r.cat === n);
+  const years = [...new Set(items.map((r) => (r.date || '').slice(0, 4)))].filter(Boolean).sort().reverse();
+  if (year) items = items.filter((r) => (r.date || '').startsWith(year));
+  if (sort === 'old') items = items.slice().reverse();
+  if (sort === 'author') items = items.slice().sort((a, b) => (a.a || '~').localeCompare(b.a || '~'));
+  const vis = items.slice(0, shown);
+  app.innerHTML = `<div class="cv-head"><a class="lnk" href="browse.html">← All categories</a>
+    <div class="cv-title"><div class="cv-num"><b>${pad(n)}</b><span lang="zh">${zhNum(n)}</span></div>
+    <div><h1>${esc(c.en)}</h1><p lang="zh">${esc(c.zh)}</p></div></div></div>
+  <div class="toolbar"><b>${items.length.toLocaleString('en-GB')} articles</b>
+    <label>Sort <select class="sel" id="sort"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="author">Author A–Z</option></select></label>
+    <label>Year <select class="sel" id="year"><option value="">All years</option>${years.map((y) => `<option>${y}</option>`).join('')}</select></label>
+    <a class="end" href="search.html?cat=${n}"><b>Search within this category →</b></a></div>
+  <ol class="cv-list" data-list="${vis.map((x) => x.id).join(',')}" data-label="Shelf ${pad(n)}">${vis.map((x) => row(x, 'cv')).join('')}</ol>
+  ${shown < items.length ? `<div class="more"><button type="button" class="btn" id="more">Load more (${(items.length - shown).toLocaleString('en-GB')} left)</button></div>` : ''}`;
+  app.querySelector('#sort').value = sort; app.querySelector('#year').value = year;
+  app.querySelector('#sort').onchange = (e) => catView(n, e.target.value, year);
+  app.querySelector('#year').onchange = (e) => catView(n, sort, e.target.value);
+  const more = app.querySelector('#more');
+  if (more) more.onclick = () => { const y = scrollY; catView(n, sort, year, shown + PAGE); scrollTo(0, y); };
+}
+
+app.addEventListener('click', (e) => {
+  const b = e.target.closest('.row'); if (!b) return;
+  const ol = b.closest('ol'); const ids = ol.dataset.list.split(',');
+  openArticle(ids, ids.indexOf(b.dataset.id), ol.dataset.label);
+});
+
+function route() {
+  const n = +new URL(location.href).searchParams.get('cat');
+  if (n >= 1 && n <= 12) catView(n); else grid();
+}
+app.innerHTML = '<div class="empty"><span class="spinner" aria-hidden="true"></span><p>Loading the shelves…</p></div>';
+loadIndex().then((r) => { rows = r; route(); openFromUrl(); })
+  .catch(() => { app.innerHTML = '<div class="empty"><p class="big">The index could not be loaded.</p><p>Please reload the page.</p></div>'; });
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Index of Chinese Marxism</title>
+<meta name="description" content="English summaries of every article published by the Academy of Marxism, Chinese Academy of Social Sciences (marxism.cass.cn). Unofficial.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem('icm-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script>
+<link rel="stylesheet" href="assets/fonts.css?v=9">
+<link rel="stylesheet" href="assets/style.css?v=9">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D4140B'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle' fill='white' font-family='serif'%3E马%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#D4140B">
+<meta property="og:site_name" content="Index of Chinese Marxism">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Index of Chinese Marxism">
+<meta property="og:description" content="English summaries of every article published by the Academy of Marxism, Chinese Academy of Social Sciences (marxism.cass.cn). Unofficial.">
+<meta property="og:image" content="https://chinesemarxism.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script>
+  // count page visits only: never the search question or other parameters in the address
+  window.goatcounter = { path: function () { return location.pathname; } };
+</script>
+<script data-goatcounter="https://indexofchinesemarxism.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body class="home">
+<main>
+  <div class="hero">
+    <h1>Index of<br>Chinese<br>Marxism</h1>
+    <p class="sub">All articles of the CASS Academy of Marxism&nbsp;<a href="about.html">unofficially summarized &amp; indexed</a></p>
+    <p class="zh" lang="zh" aria-label="中国马克思主义索引">索引 中国<br>马克思主义</p>
+  </div>
+  <div class="rule"></div>
+  <div class="cta">
+    <div class="btns">
+      <a class="btn solid" href="search.html"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>Search the archive</a>
+      <a class="btn" href="browse.html">Browse categories →</a>
+    </div>
+    <p>All articles from <a href="http://marxism.cass.cn/">marxism.cass.cn</a>, summarized into English and easily searchable for non-Chinese Marxists. DIY project.</p>
+  </div>
+  <div class="stats"><span id="count">… articles summarised</span><span id="sync"></span></div>
+</main>
+<script type="module">
+import { chrome, loadIndex, openFromUrl } from './assets/core.js?v=9';
+chrome('index.html', { footer: false });
+loadIndex().then((rows) => {
+  document.getElementById('count').textContent = rows.length.toLocaleString('en-GB') + ' articles summarised';
+  const last = rows.reduce((m, r) => (r.date > m ? r.date : m), '');
+  document.getElementById('sync').textContent = 'Newest article ' + last;
+}).catch(() => {});
+openFromUrl();
+</script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Search — Index of Chinese Marxism</title>
+<meta name="description" content="Search English summaries of marxism.cass.cn by meaning or by exact words.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem('icm-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script>
+<link rel="stylesheet" href="assets/fonts.css?v=9">
+<link rel="stylesheet" href="assets/style.css?v=9">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D4140B'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle' fill='white' font-family='serif'%3E马%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#D4140B">
+<meta property="og:site_name" content="Index of Chinese Marxism">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Search — Index of Chinese Marxism">
+<meta property="og:description" content="Search English summaries of marxism.cass.cn by meaning or by exact words.">
+<meta property="og:image" content="https://chinesemarxism.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script>
+  // count page visits only: never the search question or other parameters in the address
+  window.goatcounter = { path: function () { return location.pathname; } };
+</script>
+<script data-goatcounter="https://indexofchinesemarxism.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+<main>
+  <div class="page-head"><h1>Search</h1><p class="zh" lang="zh">搜索</p></div>
+  <form role="search" class="search-form" id="form">
+    <label for="q" class="sr-only">Search the index</label>
+    <div class="bar">
+      <input id="q" type="search" autocomplete="off" placeholder="Ask a question, or type a name or term">
+      <button type="submit" class="go" aria-label="Search"><svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></button>
+    </div>
+  </form>
+  <div class="toolbar sbar">
+    <div class="seg" role="group" aria-label="Match">
+      <button type="button" class="btn" data-mode="meaning" aria-pressed="true">By meaning</button>
+      <button type="button" class="btn" data-mode="exact" aria-pressed="false">Exact words</button>
+    </div>
+    <label class="sr-only" for="cat">Category</label>
+    <select class="sel" id="cat"><option value="">All categories</option></select>
+    <label class="sr-only" for="year">Year</label>
+    <select class="sel" id="year"><option value="">Any year</option></select>
+    <span class="end" id="count" aria-live="polite"></span>
+  </div>
+  <div id="out"></div>
+</main>
+<script type="module">
+import { chrome, CATS, pad, esc, loadIndex, openArticle, openFromUrl, saved, ICON } from './assets/core.js?v=9';
+import { loadEngine, isReady, scores } from './assets/semantic.js?v=9';
+chrome('search.html');
+
+const $ = (s) => document.querySelector(s);
+const out = $('#out'), input = $('#q');
+const PAGE = 20;
+let rows = [], mode = 'meaning', results = [], shown = PAGE, lastQ = '', text = null;
+const EXAMPLES = ['platform capitalism and digital labour', 'what do Chinese scholars make of Western Marxism?', 'ecological crisis and socialism',
+  'the socialist market economy', 'common prosperity and inequality', 'Marx’s theory of rent'];
+const STOP = new Set('a an the of and or in on to for with by from about what how why do does is are was were which who that this these those into at as be its it their his her china chinese'.split(' '));
+
+CATS.slice(1).forEach((c) => $('#cat').insertAdjacentHTML('beforeend', `<option value="${c.num}">${esc(c.en)}</option>`));
+
+function examples() {
+  out.innerHTML = `<div class="examples"><span>Try</span>${EXAMPLES.map((e) => `<button type="button" class="ex">${esc(e)}</button>`).join('')}</div>`;
+  $('#count').textContent = '';
+}
+
+function loadingView(pct) {
+  let el = out.querySelector('.loading');
+  if (!el) {
+    out.innerHTML = `<section class="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span>
+      <div class="txt"><p class="h">Loading the search model… <span class="pct">0</span>%</p>
+      <p class="p">The first search can take a few seconds while the search model (about 55 MB) loads into your browser. After that, searching is instant, and your questions never leave your computer.</p>
+      <span class="pbar" aria-hidden="true"><i></i></span></div></section>`;
+    el = out.querySelector('.loading');
+  }
+  el.querySelector('.pct').textContent = pct;
+  el.querySelector('.pbar i').style.width = pct + '%';
+}
+
+function tokens(q) { return q.toLowerCase().split(/[^\p{L}\p{N}’'-]+/u).filter((w) => w.length > 1 && !STOP.has(w)); }
+function haystack(r) { return `${r.t} ${r.zh} ${r.a} ${r.k} ${r.lede}`.toLowerCase(); }
+
+function filters() { return { cat: +$('#cat').value || 0, year: $('#year').value }; }
+function passes(r, f) { return (!f.cat || r.cat === f.cat) && (!f.year || (r.date || '').startsWith(f.year)); }
+
+async function runMeaning(q) {
+  if (!isReady()) {
+    loadingView(0);
+    try { await loadEngine(loadingView); }
+    catch (e) {
+      console.error(e);
+      out.innerHTML = `<div class="empty"><p class="big">The search model could not be loaded.</p><p>Your browser or network may block it. You can still search with <b>Exact words</b>.</p></div>`;
+      return null;
+    }
+  }
+  const s = await scores(q);
+  // short searches (a name, a place, a term) also reward articles that contain the words literally
+  const tk = tokens(q); const phrase = q.toLowerCase().trim();
+  const boost = tk.length && tk.length <= 4;
+  const f = filters();
+  const list = [];
+  rows.forEach((r, i) => {
+    if (!passes(r, f)) return;
+    let sc = s[i];
+    if (boost) {
+      const h = haystack(r);
+      if (h.includes(phrase)) sc += 0.12;
+      else { const hit = tk.filter((w) => h.includes(w)).length; sc += 0.06 * hit / tk.length; }
+    }
+    list.push({ r, sc });
+  });
+  list.sort((a, b) => b.sc - a.sc);
+  return list.slice(0, 200);
+}
+
+async function runExact(q) {
+  if (!text) {
+    out.innerHTML = '<section class="loading" role="status"><span class="spinner" aria-hidden="true"></span><div class="txt"><p class="h">Loading the full text…</p></div></section>';
+    text = await fetch('data/text.json').then((r) => r.json());
+  }
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const f = filters(); const list = [];
+  rows.forEach((r, i) => {
+    if (!passes(r, f)) return;
+    const t = text[i].toLowerCase();
+    if (!words.every((w) => t.includes(w))) return;
+    let n = 0; words.forEach((w) => { n += t.split(w).length - 1; });
+    list.push({ r, sc: n, i });
+  });
+  list.sort((a, b) => b.sc - a.sc || (b.r.date > a.r.date ? 1 : -1));
+  return list;
+}
+
+function snippet(item, q) {
+  if (mode !== 'exact' || !text) return esc(item.r.lede);
+  const t = text[item.i]; const w = q.toLowerCase().split(/\s+/).filter(Boolean)[0] || '';
+  const at = t.toLowerCase().indexOf(w);
+  if (at < 0) return esc(item.r.lede);
+  const s = Math.max(0, t.lastIndexOf('. ', at) + 2), e = t.indexOf('. ', at + w.length);
+  const sent = t.slice(s, e < 0 ? undefined : e + 1);
+  const re = new RegExp('(' + q.split(/\s+/).filter(Boolean).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+  return (s > 0 ? '… ' : '') + esc(sent).replace(re, '<mark>$1</mark>') + ' …';
+}
+
+function render() {
+  const q = lastQ;
+  $('#count').textContent = results.length ? `${results.length >= 200 && mode === 'meaning' ? 'Top 200' : results.length.toLocaleString('en-GB')} results` : '0 results';
+  if (!results.length) {
+    out.innerHTML = `<div class="empty"><p class="big">Nothing found for “${esc(q)}”.</p><p>${mode === 'exact' ? 'Exact words needs every word to appear in the summary. Try fewer words, or search <b>by meaning</b>.' : 'Try other words, or remove the category and year filters.'}</p></div>`;
+    return;
+  }
+  const vis = results.slice(0, shown);
+  const top = mode === 'meaning' ? results[0].sc : results[0].sc;
+  out.innerHTML = `<ol class="results" data-list="${vis.map((x) => x.r.id).join(',')}">${vis.map((x, k) => {
+    const c = CATS[x.r.cat] || { en: '' }; const on = saved.has(x.r.id);
+    const pct = mode === 'meaning' ? Math.max(4, Math.min(100, Math.round((x.sc - 0.45) / 0.45 * 100))) : Math.max(4, Math.round(x.sc / top * 100));
+    return `<li><div class="r-score"><b>${pad(k + 1)}</b><span>MATCH</span><span class="mbar" aria-hidden="true"><i style="width:${pct}%"></i></span></div>
+      <div class="r-body"><p class="r-meta"><span class="c">${esc(c.en)}</span> · ${esc(x.r.a || 'No author given')} · ${esc(x.r.date)}</p>
+      <h2><button type="button" class="title-link" data-id="${x.r.id}">${esc(x.r.t)}</button></h2>
+      <p class="r-zh" lang="zh">${esc(x.r.zh)}</p><p class="r-lede">${snippet(x, q)}</p></div>
+      <div class="r-save"><button type="button" class="btn icon save" data-id="${x.r.id}" aria-pressed="${on}" aria-label="${on ? 'Remove bookmark' : 'Bookmark article'}">${ICON.mark(on)}</button></div></li>`;
+  }).join('')}</ol>${shown < results.length ? `<div class="more"><button type="button" class="btn" id="more">More results</button></div>` : ''}`;
+}
+
+async function search(q, push = true) {
+  q = q.trim(); if (!q) { examples(); return; }
+  lastQ = q; shown = PAGE;
+  if (push) { const u = new URL(location.href); u.searchParams.set('q', q); u.searchParams.set('mode', mode); history.replaceState(null, '', u); }
+  const r = mode === 'meaning' ? await runMeaning(q) : await runExact(q);
+  if (r === null || q !== lastQ) return;
+  results = r; render();
+}
+
+$('#form').addEventListener('submit', (e) => { e.preventDefault(); input.blur(); search(input.value); });
+document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll('[data-mode]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  if (input.value.trim()) search(input.value);
+}));
+['#cat', '#year'].forEach((s) => $(s).addEventListener('change', () => { if (lastQ) search(lastQ); }));
+out.addEventListener('click', (e) => {
+  const ex = e.target.closest('.ex'); if (ex) { input.value = ex.textContent; search(ex.textContent); return; }
+  const t = e.target.closest('.title-link');
+  if (t) { const ids = out.querySelector('.results').dataset.list.split(','); openArticle(ids, ids.indexOf(t.dataset.id), 'Result'); return; }
+  const s = e.target.closest('.save');
+  if (s) { const on = saved.toggle(s.dataset.id); s.setAttribute('aria-pressed', String(on)); s.innerHTML = ICON.mark(on); s.setAttribute('aria-label', on ? 'Remove bookmark' : 'Bookmark article'); return; }
+  if (e.target.id === 'more') { shown += PAGE; render(); }
+});
+document.addEventListener('icm:closed', () => { if (results.length) { const y = scrollY; render(); scrollTo(0, y); } });
+
+loadIndex().then((r) => {
+  rows = r;
+  [...new Set(rows.map((x) => (x.date || '').slice(0, 4)))].filter(Boolean).sort().reverse()
+    .forEach((y) => $('#year').insertAdjacentHTML('beforeend', `<option>${y}</option>`));
+  const u = new URL(location.href);
+  if (u.searchParams.get('cat')) $('#cat').value = u.searchParams.get('cat');
+  if (u.searchParams.get('mode') === 'exact') document.querySelector('[data-mode="exact"]').click();
+  const q = u.searchParams.get('q');
+  if (q) { input.value = q; search(q, false); } else examples();
+  openFromUrl();
+}).catch(() => { out.innerHTML = '<div class="empty"><p class="big">The index could not be loaded.</p><p>Please reload the page.</p></div>'; });
+</script>
+</body>
+</html>

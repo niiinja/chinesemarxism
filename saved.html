@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Saved — Index of Chinese Marxism</title>
+<meta name="description" content="English summaries of every article published by the Academy of Marxism, Chinese Academy of Social Sciences (marxism.cass.cn), searchable by meaning. Unofficial.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem('icm-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script>
+<link rel="stylesheet" href="assets/fonts.css?v=9">
+<link rel="stylesheet" href="assets/style.css?v=9">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D4140B'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle' fill='white' font-family='serif'%3E马%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#D4140B">
+<meta property="og:site_name" content="Index of Chinese Marxism">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Saved — Index of Chinese Marxism">
+<meta property="og:description" content="English summaries of every article published by the Academy of Marxism, Chinese Academy of Social Sciences (marxism.cass.cn), searchable by meaning. Unofficial.">
+<meta property="og:image" content="https://chinesemarxism.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script>
+  // count page visits only: never the search question or other parameters in the address
+  window.goatcounter = { path: function () { return location.pathname; } };
+</script>
+<script data-goatcounter="https://indexofchinesemarxism.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+<main>
+  <div class="page-head"><h1>Saved <span style="color:var(--red)" id="n"></span></h1><p>Bookmarks are kept in this browser on this device. No account needed.</p></div>
+  <div class="saved-wrap">
+    <nav class="folders" aria-label="Folders"></nav>
+    <div class="saved-main"></div>
+  </div>
+</main>
+<script type="module">
+import { chrome, CATS, pad, esc, loadIndex, byId, openArticle, openFromUrl, saved } from './assets/core.js?v=9';
+chrome('saved.html');
+const nav = document.querySelector('.folders'), main = document.querySelector('.saved-main');
+let view = 'all', editing = null; // view: 'all' | 'unfiled' | folder id ; editing: folder id being renamed
+
+function render() {
+  const s = saved.get();
+  const items = s.items.filter((x) => byId(x.id));
+  document.getElementById('n').textContent = items.length;
+  if (view !== 'all' && view !== 'unfiled' && !s.folders.some((f) => f.id === view)) view = 'all';
+  const count = (fid) => items.filter((x) => x.folder === fid).length;
+  nav.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button type="button" class="btn" data-view="all" aria-pressed="${view === 'all'}">All · ${items.length}</button>
+      <button type="button" class="btn" data-view="unfiled" aria-pressed="${view === 'unfiled'}">Unfiled · ${count('')}</button></div>
+    <p class="lab">FOLDERS</p>
+    <div class="fgrid">${s.folders.map((f) => `<button type="button" class="folder" data-view="${f.id}" aria-pressed="${view === f.id}"><span class="n">${esc(f.name)}</span><span class="c">${count(f.id)} saved</span></button>`).join('')}
+      <button type="button" class="ghost" id="newf"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 4v16M4 12h16"/></svg>New folder</button></div>
+    <p class="lab">BACKUP</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn" id="exp">Export</button><label class="btn" style="position:relative">Import<input type="file" id="imp" accept="application/json" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label></div>
+    <div class="side-donate"><p>Using this site a lot? Help cover the cost of the summaries.</p><a class="btn" href="https://buymeacoffee.com/leessyndikaat" target="_blank" rel="noopener">Buy me a coffee →</a></div>`;
+
+  const folder = s.folders.find((f) => f.id === view);
+  const vis = view === 'all' ? items : items.filter((x) => x.folder === (view === 'unfiled' ? '' : view));
+  const title = folder ? folder.name : view === 'unfiled' ? 'Unfiled' : 'All saved';
+  const bar = editing ? `<label for="ft" class="sr-only">Folder title</label><input id="ft" type="text" value="${esc(folder ? folder.name : '')}" placeholder="e.g. Reading group, week 3">
+      <div class="acts"><button type="button" class="btn solid" id="commit">Save</button><button type="button" class="btn" id="cancel">Cancel</button></div>`
+    : `<h2>${folder ? '<svg aria-hidden="true" width="34" height="28" viewBox="0 0 34 28" style="flex:0 0 auto"><path d="M1.5 4.5h12l3 4h16v18h-31z" stroke-width="3" style="fill:var(--red);stroke:var(--fg)"/></svg>' : ''}${esc(title)}</h2>
+      ${folder ? '<div class="acts"><button type="button" class="btn" id="rename">Rename</button><button type="button" class="btn rm" id="delf">Delete folder</button></div>' : ''}`;
+  let list;
+  if (!items.length) list = `<div class="empty"><p class="big">Nothing saved yet.</p><p>Use the bookmark button on any article or search result to keep it here.</p><a class="btn solid" href="browse.html">Browse the shelves</a></div>`;
+  else if (!vis.length) list = `<div class="empty"><p class="big">This folder is empty.</p><p>Use the Folder menu on any saved article to file it here.</p><button type="button" class="btn" data-view="all">Show all saved</button></div>`;
+  else list = `<ol class="slist" data-list="${vis.map((x) => x.id).join(',')}">${vis.map((x, k) => {
+    const r = byId(x.id); const c = CATS[r.cat] || { en: '' };
+    return `<li><span class="num">${pad(k + 1)}</span><div class="b"><p class="r-meta"><b>${esc(c.en)}</b> · ${esc(r.a || 'No author given')} · Saved ${esc(x.at || '')}</p>
+      <h3><button type="button" class="title-link" data-id="${x.id}">${esc(r.t)}</button></h3><p class="r-zh" lang="zh">${esc(r.zh)}</p></div>
+      <div class="ctl"><label>FOLDER<select data-move="${x.id}"><option value="">— Unfiled</option>${s.folders.map((f) => `<option value="${f.id}"${x.folder === f.id ? ' selected' : ''}>${esc(f.name)}</option>`).join('')}</select></label>
+      <button type="button" class="btn rm" data-rm="${x.id}">Remove</button></div></li>`;
+  }).join('')}</ol>`;
+  main.innerHTML = `<div class="saved-bar">${bar}</div>${list}`;
+  if (editing) { const i = main.querySelector('#ft'); i.focus(); i.select(); }
+}
+
+function update(fn) { const s = saved.get(); fn(s); saved.set(s); render(); }
+document.addEventListener('click', (e) => {
+  const v = e.target.closest('[data-view]'); if (v && !e.target.closest('.pop')) { view = v.dataset.view; editing = null; render(); return; }
+  if (e.target.closest('#newf')) { const id = 'f' + Date.now().toString(36); update((s) => s.folders.push({ id, name: 'New folder' })); view = id; editing = id; render(); return; }
+  if (e.target.closest('#rename')) { editing = view; render(); return; }
+  if (e.target.closest('#cancel')) { editing = null; render(); return; }
+  if (e.target.closest('#commit')) { commit(); return; }
+  if (e.target.closest('#delf')) {
+    const s = saved.get(); const f = s.folders.find((x) => x.id === view);
+    if (f && confirm(`Delete the folder “${f.name}”? The articles in it stay saved, as unfiled.`)) {
+      update((s) => { s.folders = s.folders.filter((x) => x.id !== view); s.items.forEach((x) => { if (x.folder === view) x.folder = ''; }); }); view = 'all'; render();
+    }
+    return;
+  }
+  const rm = e.target.closest('[data-rm]'); if (rm) { update((s) => { s.items = s.items.filter((x) => x.id !== rm.dataset.rm); }); return; }
+  const t = e.target.closest('.slist .title-link');
+  if (t) { const ids = main.querySelector('.slist').dataset.list.split(','); openArticle(ids, ids.indexOf(t.dataset.id), 'Saved'); return; }
+  if (e.target.closest('#exp')) {
+    const blob = new Blob([JSON.stringify(saved.get(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'icm-saved.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+});
+function commit() {
+  const name = main.querySelector('#ft').value.trim() || 'Untitled folder';
+  update((s) => { const f = s.folders.find((x) => x.id === editing); if (f) f.name = name; }); editing = null; render();
+}
+document.addEventListener('keydown', (e) => { if (editing && e.target.id === 'ft') { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { editing = null; render(); } } });
+document.addEventListener('change', (e) => {
+  const m = e.target.closest('[data-move]'); if (m) { update((s) => { const x = s.items.find((i) => i.id === m.dataset.move); if (x) x.folder = m.value; }); return; }
+  if (e.target.id === 'imp' && e.target.files[0]) {
+    e.target.files[0].text().then((t) => {
+      try {
+        const inc = JSON.parse(t); if (!Array.isArray(inc.items)) throw new Error();
+        update((s) => {
+          (inc.folders || []).forEach((f) => { if (!s.folders.some((x) => x.id === f.id)) s.folders.push({ id: String(f.id), name: String(f.name) }); });
+          inc.items.forEach((x) => { if (!s.items.some((y) => y.id === String(x.id))) s.items.push({ id: String(x.id), folder: String(x.folder || ''), at: String(x.at || '') }); });
+        });
+      } catch (err) { alert('That file is not a saved-articles export.'); }
+    });
+  }
+});
+document.addEventListener('icm:saved', () => { if (!document.querySelector('.pop')) render(); });
+document.addEventListener('icm:closed', render);
+loadIndex().then(() => { render(); openFromUrl(); });
+</script>
+</body>
+</html>
