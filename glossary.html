@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Glossary — Index of Chinese Marxism</title>
+<meta name="description" content="Chinese political and theoretical terms used in the summaries, with the Chinese, the pinyin and a short explanation.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem('icm-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script>
+<link rel="stylesheet" href="assets/fonts.css?v=9">
+<link rel="stylesheet" href="assets/style.css?v=11">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D4140B'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle' fill='white' font-family='serif'%3E马%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#D4140B">
+<meta property="og:site_name" content="Index of Chinese Marxism">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Glossary — Index of Chinese Marxism">
+<meta property="og:description" content="Chinese political and theoretical terms used in the summaries, with the Chinese, the pinyin and a short explanation.">
+<meta property="og:image" content="https://chinesemarxism.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script>
+  // count page visits only: never the search question or other parameters in the address
+  window.goatcounter = { path: function () { return location.pathname; } };
+</script>
+<script data-goatcounter="https://indexofchinesemarxism.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+<main>
+  <div class="page-head"><h1>Glossary</h1><p class="zh" lang="zh">词汇表</p></div>
+  <div class="toolbar gl-bar">
+    <label class="gl-find"><span class="sr-only">Filter terms</span><input id="q" type="search" placeholder="Filter terms: English, Chinese or pinyin" autocomplete="off"></label>
+    <div class="seg" role="group" aria-label="Order">
+      <button type="button" class="btn" data-sort="az" aria-pressed="true">A–Z</button>
+      <button type="button" class="btn" data-sort="n" aria-pressed="false">Most used</button>
+    </div>
+    <span class="end meta" id="count" aria-live="polite"></span>
+  </div>
+  <p class="gl-intro">Every Chinese political and theoretical term explained in the summaries, collected in one place. The explanations are machine-generated like the summaries (<a href="about.html">more about that</a>). Each term links to all articles that use it.</p>
+  <ol class="gl-list" id="list"><li class="gl-wait">Loading the glossary…</li></ol>
+</main>
+<script type="module">
+import { chrome, openFromUrl, esc } from './assets/core.js?v=11';
+chrome('glossary.html');
+openFromUrl();
+const plain = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const key = (s) => plain(s).replace(/^[^0-9a-z]+/, '');
+let terms = [], order = 'az';
+const item = (t) => `<li class="gt"><div class="l"><span class="z" lang="zh">${esc(t.zh)}</span><span class="py">${esc(t.py)}</span></div>
+  <div class="r"><span class="en">${esc(t.en)}</span><span class="def">${esc(t.ex)}</span>
+  ${t.lit ? `<span class="lit"><b>LITERALLY · </b>${esc(t.lit)}</span>` : ''}
+  <p class="n"><span class="meta">Explained in ${t.n.toLocaleString('en-GB')} summar${t.n === 1 ? 'y' : 'ies'}</span> · <a href="search.html?q=${encodeURIComponent(t.q)}&amp;mode=exact">Find all articles with this term →</a></p></div></li>`;
+function render() {
+  const q = plain(document.getElementById('q').value.trim());
+  const qs = q.replace(/\s+/g, '');
+  let rows = !q ? terms : terms.filter((t) => t._en.includes(q) || t.zh.includes(q) || t._py.includes(qs));
+  if (order === 'n') rows = [...rows].sort((a, b) => b.n - a.n);
+  document.getElementById('count').textContent = `${rows.length.toLocaleString('en-GB')} of ${terms.length.toLocaleString('en-GB')} terms`;
+  const list = document.getElementById('list');
+  list.innerHTML = rows.length ? rows.slice(0, 300).map(item).join('') : '<li class="gl-wait">No terms match.</li>';
+  // the rest follows in the background, so the first terms appear at once
+  if (rows.length > 300) requestAnimationFrame(() => list.insertAdjacentHTML('beforeend', rows.slice(300).map(item).join('')));
+}
+fetch('data/glossary.json').then((r) => r.json()).then((t) => {
+  terms = t.map((x) => Object.assign(x, { _en: plain(x.en), _py: plain(x.py).replace(/\s+/g, '') }));
+  render();
+}).catch(() => { document.getElementById('list').innerHTML = '<li class="gl-wait">The glossary could not be loaded.</li>'; });
+let timer;
+document.getElementById('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(render, 120); });
+document.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => {
+  order = b.dataset.sort;
+  document.querySelectorAll('[data-sort]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+}));
+</script>
+</body>
+</html>

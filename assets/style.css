@@ -348,3 +348,23 @@ body.modal-open{overflow:hidden}
 .instr .prompt code{font:14px var(--f-mono)}
 @media (max-width:640px){.instr .prompt{padding:18px 16px;font-size:16px}}
 @media (max-width:640px){.dlg-bar .btn:hover{background:transparent;color:var(--blue)}}
+
+/* ---------- glossary page ---------- */
+.gl-bar{background:var(--bg)}
+.gl-find{flex:1 1 320px;min-width:0}
+.gl-find input{width:100%;min-height:48px;border:3px solid var(--fg);border-radius:0;padding:0 14px;font:16px var(--f-mono);text-transform:none;letter-spacing:0}
+.gl-intro{margin:0;padding:24px var(--gutter);max-width:calc(68ch + 2 * var(--gutter));font:17px/1.6 var(--f-serif)}
+.gl-list{list-style:none;margin:0;padding:0;border-top:3px solid var(--fg)}
+.gt{display:flex;flex-wrap:wrap;gap:12px 40px;padding:24px var(--gutter);border-bottom:1px solid var(--fg)}
+.gt .l{flex:0 0 260px;max-width:100%;display:flex;flex-direction:column;gap:6px}
+.gt .z{font-weight:900;font-size:30px;line-height:1.15;color:var(--red);overflow-wrap:anywhere}
+.gt .py{font-size:13px}
+.gt .r{flex:1 1 420px;min-width:0;max-width:72ch;display:flex;flex-direction:column;gap:8px}
+.gt .en{font:700 24px/1.15 var(--f-cond)}
+.gt .def{font:16px/1.6 var(--f-serif)}
+.gt .lit{font-size:13px;line-height:1.5}
+.gt .lit b{font-weight:600;letter-spacing:.08em}
+.gt .n{margin:0;font-size:13px;line-height:1.6;letter-spacing:.04em}
+.gt .n a{font-weight:600}
+.gl-wait{padding:40px var(--gutter);font-size:15px}
+@media (max-width:640px){.gt{padding:20px var(--gutter)}.gt .z{font-size:26px}.gt .en{font-size:21px}.gl-bar .seg{flex:1 1 auto}.gl-bar .seg .btn{flex:1 1 50%}}
