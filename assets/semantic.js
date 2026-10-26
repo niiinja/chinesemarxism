@@ -16,8 +16,8 @@ export async function loadEngine(onProgress = () => {}) {
   if (loading) return loading;
   loading = (async () => {
     const [m, buf] = await Promise.all([
-      fetch('data/embeddings.json').then((r) => r.json()),
-      fetch('data/embeddings.bin').then((r) => r.arrayBuffer()),
+      fetch('data/embeddings.json', { cache: 'no-cache' }).then((r) => r.json()),
+      fetch('data/embeddings.bin', { cache: 'no-cache' }).then((r) => r.arrayBuffer()),
     ]);
     meta = m; vectors = new Int8Array(buf);
     const { pipeline, env } = await import('./vendor/transformers.min.js');

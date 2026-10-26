@@ -26,6 +26,8 @@ export function esc(s) {
 const ICON = {
   x: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 5l14 14M19 5 5 19"/></svg>',
   mark: (on) => `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="${on ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5"><path d="M6 3h12v18l-6-5-6 5z"/></svg>`,
+  left: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M20 12H4M11 5l-7 7 7 7"/></svg>',
+  right: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M4 12h16M13 5l7 7-7 7"/></svg>',
   out: '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17 17 7M8 7h9v9"/></svg>',
   theme: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg>',
 };
@@ -81,7 +83,7 @@ function slideAway(header) {
 let _index, _byId;
 export async function loadIndex() {
   if (!_index) {
-    _index = fetch('data/index.json').then((r) => { if (!r.ok) throw new Error('index ' + r.status); return r.json(); });
+    _index = fetch('data/index.json', { cache: 'no-cache' }).then((r) => { if (!r.ok) throw new Error('index ' + r.status); return r.json(); });
     _index.then((rows) => { _byId = new Map(rows.map((r, i) => [r.id, Object.assign(r, { i })])); });
   }
   await _index;
@@ -90,7 +92,7 @@ export async function loadIndex() {
 export function byId(id) { return _byId && _byId.get(String(id)); }
 const _cats = {};
 export function loadCat(n) {
-  if (!_cats[n]) _cats[n] = fetch(`data/cat/${pad(n)}.json`).then((r) => r.json()).then((rows) => new Map(rows.map((x) => [x.id, x])));
+  if (!_cats[n]) _cats[n] = fetch(`data/cat/${pad(n)}.json`, { cache: 'no-cache' }).then((r) => r.json()).then((rows) => new Map(rows.map((x) => [x.id, x])));
   return _cats[n];
 }
 export async function loadArticle(id) {
@@ -223,8 +225,8 @@ export function openArticle(ids, pos = 0, label = '') {
           <div class="dlg-top"><p></p><button type="button" class="x" aria-label="Close and put back on the shelf">${ICON.x}</button></div>
           <div class="dlg-body"></div>
           <div class="dlg-bar">
-            <button type="button" class="btn prev" aria-label="Previous article"><span aria-hidden="true">←</span><span class="lbl">Previous</span></button>
-            <button type="button" class="btn next" aria-label="Next article"><span class="lbl">Next</span><span aria-hidden="true">→</span></button>
+            <button type="button" class="btn prev" aria-label="Previous article">${ICON.left}<span class="lbl">Previous</span></button>
+            <button type="button" class="btn next" aria-label="Next article"><span class="lbl">Next</span>${ICON.right}</button>
             <button type="button" class="btn icon save"></button>
             <span class="sp"></span>
             <a class="orig" href="#" target="_blank" rel="noopener"><span class="rt">Read the </span>original <span lang="zh">阅读原文</span>${ICON.out}</a>

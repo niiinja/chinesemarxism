@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>try{var t=localStorage.getItem('icm-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}</script>
 <link rel="stylesheet" href="assets/fonts.css?v=9">
-<link rel="stylesheet" href="assets/style.css?v=11">
+<link rel="stylesheet" href="assets/style.css?v=16">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D4140B'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle' fill='white' font-family='serif'%3E马%3C/text%3E%3C/svg%3E">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -41,7 +41,7 @@
   <ol class="gl-list" id="list"><li class="gl-wait">Loading the glossary…</li></ol>
 </main>
 <script type="module">
-import { chrome, openFromUrl, esc } from './assets/core.js?v=11';
+import { chrome, openFromUrl, esc } from './assets/core.js?v=13';
 chrome('glossary.html');
 openFromUrl();
 const plain = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -62,7 +62,7 @@ function render() {
   // the rest follows in the background, so the first terms appear at once
   if (rows.length > 300) requestAnimationFrame(() => list.insertAdjacentHTML('beforeend', rows.slice(300).map(item).join('')));
 }
-fetch('data/glossary.json').then((r) => r.json()).then((t) => {
+fetch('data/glossary.json', { cache: 'no-cache' }).then((r) => r.json()).then((t) => {
   terms = t.map((x) => Object.assign(x, { _en: plain(x.en), _py: plain(x.py).replace(/\s+/g, '') }));
   render();
 }).catch(() => { document.getElementById('list').innerHTML = '<li class="gl-wait">The glossary could not be loaded.</li>'; });
